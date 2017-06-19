@@ -24,12 +24,8 @@ def variance_decomposition(quant_df,metadata_df):
     rel_var_columns = selected_columns+['residual']
 
     for idx,feature_id in enumerate(quant_df.index[:50]):
-        if (idx%50==0):
-            print idx
         phenotypes = quant_df.loc[feature_id,:].dropna()
         samples = list(set(phenotypes.index)&set(metadata_df.index))
-        print rel_var_columns
-        print phenotypes
         # variance component model
         vc = VarianceDecomposition(phenotypes.values)
         vc.addFixedEffect()
@@ -39,7 +35,6 @@ def variance_decomposition(quant_df,metadata_df):
         vc.addRandomEffect(is_noise=True)
         vc.optimize()
         var_data = vc.getVarianceComps()[0]
-        print var_data
         var_dataseries = pd.Series(data=var_data,index=rel_var_columns)
         var_dataseries = var_dataseries/var_dataseries.sum()
 
