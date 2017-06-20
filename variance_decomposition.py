@@ -23,7 +23,7 @@ def variance_decomposition(quant_df,metadata_df):
 
     rel_var_columns = selected_columns+['residual']
 
-    for idx,feature_id in enumerate(quant_df.index[:50]):
+    for idx,feature_id in enumerate(quant_df.index):
         phenotypes = quant_df.loc[feature_id,:].dropna()
         samples = list(set(phenotypes.index)&set(metadata_df.index))
         # variance component model
