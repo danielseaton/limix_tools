@@ -27,17 +27,22 @@ def variance_decomposition(quant_df,metadata_df):
         phenotypes = quant_df.loc[feature_id,:].dropna()
         samples = list(set(phenotypes.index)&set(metadata_df.index))
         # variance component model
-        vc = VarianceDecomposition(phenotypes.values)
+        vc = VarianceDecomposition(phenotypes.loc[samples].values)
         vc.addFixedEffect()
         for key in selected_columns:
             random_effect_matrix = random_effect_dict[key].loc[samples,samples].as_matrix()
             vc.addRandomEffect(K=random_effect_matrix)
         vc.addRandomEffect(is_noise=True)
-        vc.optimize()
-        var_data = vc.getVarianceComps()[0]
-        var_dataseries = pd.Series(data=var_data,index=rel_var_columns)
-        var_dataseries = var_dataseries/var_dataseries.sum()
+        try:
+            vc.optimize()
+            var_data = vc.getVarianceComps()[0]
+            var_dataseries = pd.Series(data=var_data,index=rel_var_columns)
+            var_dataseries = var_dataseries/var_dataseries.sum()
+            var_df.loc[feature_id,rel_var_columns] = var_dataseries
+        except np.linalg.linalg.LinAlgError:
+            #This error is raised when the covariance of the phenotype is not positive definite
+            # (e.g. if it is all zeros)
+            var_df.loc[feature_id,rel_var_columns] = np.nan
 
-        var_df.loc[feature_id,rel_var_columns] = var_dataseries
         
     return var_df
