@@ -10,14 +10,18 @@ def variance_decomposition(quant_df,metadata_df):
     metadata_df.dropna(inplace=True)
     
     selected_columns = list(metadata_df.columns)
-    
+    print 'Running variance decomposition for: {}'.format(selected_columns)
     random_effect_dict = dict()
     for column_name in selected_columns:
         random_effect_mat = []
         for categorical_value in metadata_df[column_name]:
-            random_effect_mat.append(metadata_df[column_name].map(lambda x : int(x==categorical_value)).values)
+            vector_of_matches = metadata_df[column_name].map(lambda x : int(x==categorical_value)).values
+            if sum(vector_of_matches)==len(vector_of_matches):
+                print 'All samples are identical'
+            random_effect_mat.append(vector_of_matches)
         random_effect_mat = np.array(random_effect_mat)
-        random_effect_dict[column_name] = pd.DataFrame(data=random_effect_mat,index=metadata_df.index,columns=metadata_df.index)
+        random_effect_df = pd.DataFrame(data=random_effect_mat,index=metadata_df.index,columns=metadata_df.index)
+        random_effect_dict[column_name] = random_effect_df
 
     var_df = pd.DataFrame(index = quant_df.index,columns=selected_columns+['residual'])
 
@@ -30,7 +34,7 @@ def variance_decomposition(quant_df,metadata_df):
         vc = VarianceDecomposition(phenotypes.loc[samples].values)
         vc.addFixedEffect()
         for key in selected_columns:
-            random_effect_matrix = random_effect_dict[key].loc[samples,samples].as_matrix()
+            random_effect_matrix = random_effect_dict[key].loc[samples,samples].values
             vc.addRandomEffect(K=random_effect_matrix)
         vc.addRandomEffect(is_noise=True)
         try:
