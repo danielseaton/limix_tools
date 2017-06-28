@@ -3,17 +3,26 @@ import numpy as np
 import pandas as pd
 import re
 from limix.varDecomp import VarianceDecomposition
+import statsmodels.nonparametric.smoothers_lowess
 
-def run_variance_analysis(quant_df,metadata_df,var_stabilizing_transform=np.log10):
+
+def run_variance_analysis(quant_df,metadata_df,var_stabilizing_transform=np.log2):
     '''A function to perform variance decomposition, as well as computing overdispersion
     and mean abundance statistics.'''
-    var_df = var_stabilizing_transform(quant_df)
-    var_df = variance_decomposition(quant_df,metadata_df)
-    var_df['variance'] = protein_df.apply(lambda x: np.var(x.dropna()),axis=1)
-    var_df['mean'] = protein_df.apply(lambda x: np.mean(x.dropna()),axis=1)
+    var_df = variance_decomposition(var_stabilizing_transform(quant_df),metadata_df)
+    var_df['variance'] = quant_df.apply(lambda x: np.var(x.dropna()),axis=1)
+    var_df['mean'] = quant_df.apply(lambda x: np.mean(x.dropna()),axis=1)
+    var_df['overdispersion'] = calculate_empirical_overdispersion(var_df['mean'].values,var_df['variance'].values)
+    var_df['overdispersion_rank'] = var_df['overdispersion'].rank()/float(len(var_df.index))
+    var_df['mean_rank'] = var_df['mean'].rank()/float(len(var_df.index))
     return var_df
 
-
+def calculate_empirical_overdispersion(mean,variance):
+    mean = np.log2(mean)
+    variance = np.log2(variance)
+    lowess = statsmodels.nonparametric.smoothers_lowess.lowess(variance,mean,frac=0.1,return_sorted=False)
+    overdispersion = variance-lowess
+    return overdispersion
 
 def variance_decomposition(quant_df,metadata_df):
 
