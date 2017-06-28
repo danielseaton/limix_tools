@@ -4,6 +4,17 @@ import pandas as pd
 import re
 from limix.varDecomp import VarianceDecomposition
 
+def run_variance_analysis(quant_df,metadata_df,var_stabilizing_transform=np.log10):
+    '''A function to perform variance decomposition, as well as computing overdispersion
+    and mean abundance statistics.'''
+    var_df = var_stabilizing_transform(quant_df)
+    var_df = variance_decomposition(quant_df,metadata_df)
+    var_df['variance'] = protein_df.apply(lambda x: np.var(x.dropna()),axis=1)
+    var_df['mean'] = protein_df.apply(lambda x: np.mean(x.dropna()),axis=1)
+    return var_df
+
+
+
 def variance_decomposition(quant_df,metadata_df):
 
     #Drop rows with any NA values in the metadata_df
