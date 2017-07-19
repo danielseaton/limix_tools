@@ -1,1 +1,1 @@
-from variance_decomposition import variance_decomposition
+from variance_analysis import run_variance_analysis
