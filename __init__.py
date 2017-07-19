@@ -1,1 +1,1 @@
-from variance_analysis import run_variance_analysis
+from variance_analysis import run_variance_analysis,run_variance_analysis_cross_validation

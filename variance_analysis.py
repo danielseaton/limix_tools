@@ -4,7 +4,7 @@ import pandas as pd
 import re
 from limix.varDecomp import VarianceDecomposition
 import statsmodels.nonparametric.smoothers_lowess
-
+import random
 
 def run_variance_analysis(quant_df,metadata_df,transform_fcn=np.log2):
     '''A function to perform variance decomposition, as well as computing overdispersion
@@ -23,6 +23,19 @@ def calculate_empirical_overdispersion(mean,variance,transform_fcn):
     lowess = statsmodels.nonparametric.smoothers_lowess.lowess(variance,mean,frac=0.1,return_sorted=False)
     overdispersion = variance-lowess
     return overdispersion
+
+def run_variance_analysis_cross_validation(quant_df,metadata_df,cv_fraction=0.2):
+    metadata_df.dropna(inplace=True)
+    samples = list(set(metadata_df.index)&set(quant_df.columns))
+    shuffled_samples = random.shuffle(samples)
+    nS = len(samples)
+    nLeftOut = int(cv_fraction*nS)
+    nRuns = nS/nLeftOut
+    print nS,nLeftOut,nRuns
+    sample_subsets = [shuffled_samples[:x*nLeftOut]+shuffled_samples[(x+1)*nLeftOut:] for x in range(nRuns)]
+    print len(sample_subsets)
+    var_df_list = [run_variance_analysis(quant_df.loc[:,x],metadata_df.loc[x,:]) for x in sample_subsets]
+    return var_df_list
 
 def variance_decomposition(quant_df,metadata_df):
 
