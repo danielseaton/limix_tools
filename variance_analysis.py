@@ -65,6 +65,7 @@ def variance_decomposition(quant_df,metadata_df):
         phenotypes = quant_df.loc[feature_id,:].dropna()
         if len(phenotypes)==0:
             var_df.loc[feature_id,rel_var_columns] = np.nan
+            continue
 
         samples = list(set(phenotypes.index)&set(metadata_df.index))
         # variance component model
