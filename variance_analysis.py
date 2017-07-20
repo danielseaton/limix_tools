@@ -37,7 +37,7 @@ def run_variance_analysis_cross_validation(quant_df,metadata_df,cv_fraction=0.2)
     var_df_list = [run_variance_analysis(quant_df.loc[:,x],metadata_df.loc[x,:]) for x in sample_subsets]
     return var_df_list
 
-def variance_decomposition(quant_df,metadata_df):
+def variance_decomposition(quant_df,metadata_df): 
 
     #Drop rows with any NA values in the metadata_df
     metadata_df.dropna(inplace=True)
@@ -50,7 +50,7 @@ def variance_decomposition(quant_df,metadata_df):
         for categorical_value in metadata_df[column_name]:
             vector_of_matches = metadata_df[column_name].map(lambda x : int(x==categorical_value)).values
             if sum(vector_of_matches)==len(vector_of_matches):
-                print 'All samples are identical'
+                print 'All samples are identical in {}'.format(column_name)
             random_effect_mat.append(vector_of_matches)
         random_effect_mat = np.array(random_effect_mat)
         random_effect_df = pd.DataFrame(data=random_effect_mat,index=metadata_df.index,columns=metadata_df.index)
@@ -61,7 +61,11 @@ def variance_decomposition(quant_df,metadata_df):
     rel_var_columns = selected_columns+['residual']
 
     for idx,feature_id in enumerate(quant_df.index):
+
         phenotypes = quant_df.loc[feature_id,:].dropna()
+        if len(phenotypes)==0:
+            var_df.loc[feature_id,rel_var_columns] = np.nan
+
         samples = list(set(phenotypes.index)&set(metadata_df.index))
         # variance component model
         vc = VarianceDecomposition(phenotypes.loc[samples].values)
