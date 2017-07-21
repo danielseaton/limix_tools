@@ -24,7 +24,7 @@ def calculate_empirical_overdispersion(mean,variance,transform_fcn):
     overdispersion = variance-lowess
     return overdispersion
 
-def run_variance_analysis_cross_validation(quant_df,metadata_df,cv_fraction=0.2):
+def run_variance_analysis_cross_validation(quant_df,metadata_df,transform_fcn=np.log2,cv_fraction=0.2):
     metadata_df.dropna(inplace=True)
     samples = list(set(metadata_df.index)&set(quant_df.columns))
     random.shuffle(samples)
@@ -34,7 +34,7 @@ def run_variance_analysis_cross_validation(quant_df,metadata_df,cv_fraction=0.2)
     print nS,nLeftOut,nRuns
     sample_subsets = [samples[:x*nLeftOut]+samples[(x+1)*nLeftOut:] for x in range(nRuns)]
     print len(sample_subsets)
-    var_df_list = [run_variance_analysis(quant_df.loc[:,x],metadata_df.loc[x,:]) for x in sample_subsets]
+    var_df_list = [run_variance_analysis(quant_df.loc[:,x],metadata_df.loc[x,:],transform_fcn=transform_fcn) for x in sample_subsets]
     return var_df_list
 
 def variance_decomposition(quant_df,metadata_df): 
