@@ -13,9 +13,18 @@ def run_variance_analysis(quant_df,metadata_df,transform_fcn=np.log2):
     var_df['variance'] = quant_df.apply(lambda x: np.var(x.dropna()),axis=1)
     var_df['mean'] = quant_df.apply(lambda x: np.mean(x.dropna()),axis=1)
     var_df['overdispersion'] = calculate_empirical_overdispersion(var_df['mean'].values,var_df['variance'].values,transform_fcn)
-    var_df['overdispersion_rank'] = var_df['overdispersion'].rank()/float(len(var_df.index))
-    var_df['mean_rank'] = var_df['mean'].rank()/float(len(var_df.index))
+    var_df['overdispersion_rank'] = rank_series_w_nans(var_df['overdispersion'])
+    var_df['mean_rank'] = rank_series_w_nans(var_df['mean'])
     return var_df
+
+def rank_series_w_nans(dataseries):
+    '''Rank a dataseries from 0 to 1, keeping nans as nans.'''
+    dataseries_dropped = dataseries.dropna()
+    ranked_vals_dropped = dataseries_dropped.rank()/float(len(dataseries_dropped.index))
+    ranked_vals = pd.Series(data=np.nan,index=dataseries.index)
+    ranked_vals.loc[ranked_vals_dropped.index] = ranked_vals_dropped
+    return ranked_vals
+
 
 def calculate_empirical_overdispersion(mean,variance,transform_fcn):
     mean = transform_fcn(mean)
