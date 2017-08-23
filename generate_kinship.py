@@ -8,6 +8,8 @@ import limix
 from sklearn.preprocessing import Imputer
 
 def generate_kinship(snp_df):
+    fill_NaN = Imputer(missing_values=np.nan, strategy='mean', axis=0)
+    
     snp_df = snp_df.dropna(how='all',axis=1)
     snp_df = snp_df.dropna(how='all',axis=0)
     snp_df = pd.DataFrame(data=fill_NaN.fit_transform(snp_df),columns=snp_df.columns,index=snp_df.index)
