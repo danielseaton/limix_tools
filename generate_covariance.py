@@ -44,3 +44,4 @@ def generate_kinship(bed,fam,snp_idxs,iid_idxs,chunk_size=100000):
     K /= snp_count
     kinship_df = pd.DataFrame(data=K,index=iid_idxs,columns=iid_idxs)
     return kinship_df
+
