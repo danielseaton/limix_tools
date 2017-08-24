@@ -6,6 +6,21 @@ import scipy
 import limix
 from sklearn.preprocessing import Imputer
 
+def generate_cis_kinship(bed,fam,bim,chrom,start,end,window_size):
+    lowest = min([start,end])
+    highest = max([start,end])
+    cis_snp_query = bim.query("chrom == '%s' & pos > %d & pos < %d" % (chrom, lowest-window_size, highest+window_size))
+    iid_idxs = fam.index
+    snp_idxs = cis_snp_query['i'].values
+    if len(snp_idxs)==0:
+        return None
+    kinship_cis_df = generate_kinship(bed,fam,snp_idxs,iid_idxs)
+    index = pd.Index(fam.loc[kinship_cis_df.index,'iid'])
+    kinship_cis_df.index = index
+    kinship_cis_df.columns = index
+    return kinship_cis_df
+
+
 def generate_kinship(bed,fam,snp_idxs,iid_idxs,chunk_size=100000):
     assert(all([x in fam.index for x in iid_idxs]))
 
