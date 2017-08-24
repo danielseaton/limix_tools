@@ -5,6 +5,7 @@ import re
 from limix.varDecomp import VarianceDecomposition
 import statsmodels.nonparametric.smoothers_lowess
 import random
+from generate_covariance import generate_covariance_dict
 
 def run_variance_analysis(quant_df,metadata_df,transform_fcn=np.log2):
     '''A function to perform variance decomposition, as well as computing overdispersion
@@ -51,19 +52,9 @@ def variance_decomposition(quant_df,metadata_df):
     #Drop rows with any NA values in the metadata_df
     metadata_df.dropna(inplace=True)
     
-    selected_columns = list(metadata_df.columns)
+    random_effect_dict = generate_covariance_dict(metadata_df)
+    selected_columns = random_effect_dict.keys()
     print 'Running variance decomposition for: {}'.format(selected_columns)
-    random_effect_dict = dict()
-    for column_name in selected_columns:
-        random_effect_mat = []
-        for categorical_value in metadata_df[column_name]:
-            vector_of_matches = metadata_df[column_name].map(lambda x : int(x==categorical_value)).values
-            if sum(vector_of_matches)==len(vector_of_matches):
-                print 'All samples are identical in {}'.format(column_name)
-            random_effect_mat.append(vector_of_matches)
-        random_effect_mat = np.array(random_effect_mat)
-        random_effect_df = pd.DataFrame(data=random_effect_mat,index=metadata_df.index,columns=metadata_df.index)
-        random_effect_dict[column_name] = random_effect_df
 
     var_df = pd.DataFrame(index = quant_df.index,columns=selected_columns+['residual'])
 
