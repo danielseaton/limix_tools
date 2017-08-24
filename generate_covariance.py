@@ -65,4 +65,5 @@ def generate_covariance_dict(metadata_df):
         random_effect_df = pd.DataFrame(data=random_effect_mat,index=metadata_df.index,columns=metadata_df.index)
         random_effect_dict[column_name] = random_effect_df
 
+    return random_effect_dict
 
