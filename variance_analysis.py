@@ -13,7 +13,20 @@ def run_variance_analysis(quant_df,metadata_df,transform_fcn=np.log2):
     #Drop rows with any NA values in the metadata_df
     metadata_df.dropna(inplace=True)    
     random_effect_dict = generate_covariance_dict(metadata_df)
-    var_df = variance_decomposition(transform_fcn(quant_df),random_effect_dict)
+
+    selected_columns = random_effect_dict.keys()
+    samples_w_metadata = random_effect_dict.values()[0].index
+    print 'Running variance decomposition for: {}'.format(selected_columns)
+
+    #calculate variance components
+    var_df = pd.DataFrame(index = quant_df.index,columns=selected_columns+['residual'])
+
+    var_component_names = selected_columns+['residual']
+
+    for idx,feature_id in enumerate(quant_df.index):
+        phenotype_ds = transform_fcn(quant_df.loc[feature_id,:])
+        var_df.loc[feature_id,var_component_names] = variance_decomposition(phenotype_ds,random_effect_dict)
+
     var_df['variance'] = quant_df.apply(lambda x: np.var(x.dropna()),axis=1)
     var_df['mean'] = quant_df.apply(lambda x: np.mean(x.dropna()),axis=1)
     var_df['overdispersion'] = calculate_empirical_overdispersion(var_df['mean'].values,var_df['variance'].values,transform_fcn)
@@ -50,23 +63,7 @@ def run_variance_analysis_cross_validation(quant_df,metadata_df,transform_fcn=np
     var_df_list = [run_variance_analysis(quant_df.loc[:,x],metadata_df.loc[x,:],transform_fcn=transform_fcn) for x in sample_subsets]
     return var_df_list
 
-def variance_decomposition(quant_df,random_effect_dict): 
-
-    selected_columns = random_effect_dict.keys()
-    samples_w_metadata = random_effect_dict.values()[0].index
-    print 'Running variance decomposition for: {}'.format(selected_columns)
-
-    var_df = pd.DataFrame(index = quant_df.index,columns=selected_columns+['residual'])
-
-    rel_var_columns = selected_columns+['residual']
-
-    for idx,feature_id in enumerate(quant_df.index):
-        phenotype_ds = quant_df.loc[feature_id,:]
-        var_df.loc[feature_id,rel_var_columns] = variance_decomposition_sub_fcn(phenotype_ds,random_effect_dict)
-        
-    return var_df
-
-def variance_decomposition_sub_fcn(phenotype_ds,random_effect_dict):
+def variance_decomposition(phenotype_ds,random_effect_dict):
     '''phenotype_ds is a pandas DataSeries.
        random_effect_dict is a dictionary of pandas DataFrames.'''
 
