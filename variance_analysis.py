@@ -17,7 +17,7 @@ def run_variance_analysis(quant_df, metadata_df, transform_fcn=np.log2):
 
     selected_columns = random_effect_dict.keys()
     samples_w_metadata = list(set.intersection(
-        [set(x.index) for x in random_effect_dict.values()]))
+        *[set(x.index) for x in random_effect_dict.values()]))
     print 'Running variance decomposition for: {}'.format(selected_columns)
 
     # calculate variance components
