@@ -33,6 +33,7 @@ def run_variance_analysis(quant_df, metadata_df, transform_fcn=np.log2):
 
     var_df['variance'] = quant_df.apply(lambda x: np.var(x.dropna()), axis=1)
     var_df['mean'] = quant_df.apply(lambda x: np.mean(x.dropna()), axis=1)
+    var_df['cv'] = quant_df['variance']**0.5/quant_df['mean']
     var_df['overdispersion'] = calculate_empirical_overdispersion(
         var_df['mean'].values, var_df['variance'].values, transform_fcn)
     var_df['overdispersion_rank'] = rank_series_w_nans(
