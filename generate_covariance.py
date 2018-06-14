@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import pandas as pd
 import scipy.stats
@@ -80,7 +81,7 @@ def generate_covariance_dict(metadata_df):
             vector_of_matches = metadata_df[column_name].map(
                 lambda x: int(x == categorical_value)).values
             if sum(vector_of_matches) == len(vector_of_matches):
-                print 'All samples are identical in {}'.format(column_name)
+                print('All samples are identical in {}'.format(column_name))
             random_effect_mat.append(vector_of_matches)
         random_effect_mat = np.array(random_effect_mat)
         random_effect_df = pd.DataFrame(

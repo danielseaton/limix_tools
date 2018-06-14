@@ -1,11 +1,12 @@
+from __future__ import print_function
 import limix
 import numpy as np
 import pandas as pd
 import re
-from limix.varDecomp import VarianceDecomposition
+from limix.vardec import VarianceDecomposition
 import statsmodels.nonparametric.smoothers_lowess
 import random
-from generate_covariance import generate_covariance_dict
+from .generate_covariance import generate_covariance_dict
 
 
 def run_variance_analysis(quant_df, metadata_df, transform_fcn=np.log2):
@@ -15,10 +16,10 @@ def run_variance_analysis(quant_df, metadata_df, transform_fcn=np.log2):
     metadata_df.dropna(inplace=True)
     random_effect_dict = generate_covariance_dict(metadata_df)
 
-    selected_columns = random_effect_dict.keys()
+    selected_columns = list(random_effect_dict.keys())
     samples_w_metadata = list(set.intersection(
         *[set(x.index) for x in random_effect_dict.values()]))
-    print 'Running variance decomposition for: {}'.format(selected_columns)
+    print('Running variance decomposition for: {}'.format(selected_columns))
 
     # calculate variance components
     var_df = pd.DataFrame(index=quant_df.index,
@@ -68,10 +69,10 @@ def run_variance_analysis_cross_validation(quant_df, metadata_df, transform_fcn=
     nS = len(samples)
     nLeftOut = int(cv_fraction * nS)
     nRuns = nS / nLeftOut
-    print nS, nLeftOut, nRuns
+    print(nS, nLeftOut, nRuns)
     sample_subsets = [samples[:x * nLeftOut] +
                       samples[(x + 1) * nLeftOut:] for x in range(nRuns)]
-    print len(sample_subsets)
+    print(len(sample_subsets))
     var_df_list = [run_variance_analysis(
         quant_df.loc[:, x], metadata_df.loc[x, :], transform_fcn=transform_fcn) for x in sample_subsets]
     return var_df_list
@@ -81,9 +82,9 @@ def variance_decomposition(phenotype_ds, random_effect_dict):
     '''phenotype_ds is a pandas DataSeries.
        random_effect_dict is a dictionary of pandas DataFrames.'''
 
-    var_component_names = random_effect_dict.keys() + ['residual']
+    var_component_names = list(random_effect_dict.keys()) + ['residual']
 
-    samples_w_metadata = random_effect_dict.values()[0].index
+    samples_w_metadata = random_effect_dict[list(random_effect_dict.keys())[0]]
 
     phenotype_ds = phenotype_ds.dropna()
 
