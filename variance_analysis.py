@@ -8,7 +8,7 @@ import random
 from generate_covariance import generate_covariance_dict
 
 
-def run_variance_analysis(quant_df, metadata_df, transform_fcn=np.log2):
+def run_variance_analysis(quant_df, metadata_df, transform_fcn=np.log2, fixed_effect_df=None):
     '''A function to perform variance decomposition, as well as computing overdispersion
     and mean abundance statistics.'''
     # Drop rows with any NA values in the metadata_df
@@ -29,7 +29,7 @@ def run_variance_analysis(quant_df, metadata_df, transform_fcn=np.log2):
     for idx, feature_id in enumerate(quant_df.index):
         phenotype_ds = transform_fcn(quant_df.loc[feature_id, :])
         var_df.loc[feature_id, var_component_names] = variance_decomposition(
-            phenotype_ds, random_effect_dict)
+            phenotype_ds, random_effect_dict, fixed_effect_df)
 
     var_df['variance'] = quant_df.apply(lambda x: np.var(x.dropna()), axis=1)
     var_df['mean'] = quant_df.apply(lambda x: np.mean(x.dropna()), axis=1)
@@ -77,9 +77,10 @@ def run_variance_analysis_cross_validation(quant_df, metadata_df, transform_fcn=
     return var_df_list
 
 
-def variance_decomposition(phenotype_ds, random_effect_dict):
-    '''phenotype_ds is a pandas DataSeries.
-       random_effect_dict is a dictionary of pandas DataFrames.'''
+def variance_decomposition(phenotype_ds, random_effect_dict, fixed_effect_df=None):
+    '''phenotype_ds is a pandas DataSeries, (samples, 1).
+       random_effect_dict is a dictionary of pandas DataFrames, (samples, samples).
+       fixed_effect_df is a pandas DataFrame, (samples, fixed effects).'''
 
     var_component_names = random_effect_dict.keys() + ['residual']
 
@@ -96,11 +97,22 @@ def variance_decomposition(phenotype_ds, random_effect_dict):
     vc = VarianceDecomposition(phenotype_ds.loc[samples].values)
     # add intercept
     vc.addFixedEffect()
+    # add fixed effects
+    if fixed_effect_df is not None:
+        # subset fixed effects, and remove columns with variance == 0
+        fixed_effect_df = fixed_effect_df.loc[samples, :]
+        cols_to_keep = fixed_effect_df.apply(np.std) != 0.0
+        fixed_effect_df = fixed_effect_df.loc[:, cols_to_keep]
+        fixed_effect_matrix = fixed_effect_df.values
+        vc.addFixedEffect(F=fixed_effect_matrix)
+    # add random effects
     for key in random_effect_dict.keys():
         random_effect_matrix = random_effect_dict[key].loc[samples,
                                                            samples].values
         vc.addRandomEffect(K=random_effect_matrix)
     vc.addRandomEffect(is_noise=True)
+
+    # fit the model
     try:
         vc.optimize()
         var_data = vc.getVarianceComps()[0]
