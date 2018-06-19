@@ -18,7 +18,10 @@ def run_variance_analysis(quant_df, metadata_df, transform_fcn=np.log2, fixed_ef
     selected_columns = random_effect_dict.keys()
     samples_w_metadata = list(set.intersection(
         *[set(x.index) for x in random_effect_dict.values()]))
+
     print 'Running variance decomposition for: {}'.format(selected_columns)
+    if fixed_effect_df is not None:
+        print 'Using fixed effects: {}'.format(list(fixed_effect_df.columns))
 
     # calculate variance components
     var_df = pd.DataFrame(index=quant_df.index,
