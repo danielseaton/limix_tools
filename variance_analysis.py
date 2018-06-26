@@ -12,7 +12,7 @@ def run_variance_analysis(quant_df, metadata_df, transform_fcn=np.log2, fixed_ef
     '''A function to perform variance decomposition, as well as computing overdispersion
     and mean abundance statistics.'''
     # Drop rows with any NA values in the metadata_df
-    metadata_df.dropna(inplace=True)
+    metadata_df = metadata_df.loc[quant_df.columns, :].dropna()
     random_effect_dict = generate_covariance_dict(metadata_df)
 
     selected_columns = random_effect_dict.keys()
