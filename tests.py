@@ -29,6 +29,11 @@ var_df_1 = limix_tools.run_variance_analysis(quant_df, metadata_df, transform_fc
 
 var_df_2 = limix_tools.run_variance_analysis(quant_df, metadata_df, transform_fcn=lambda x: x, fixed_effect_df=fixed_effect_df)
 
+fixed_effect_df['fixed1'] = 0
+fixed_effect_df['fixed2'] = 0.5
+
+var_df_3 = limix_tools.run_variance_analysis(quant_df, metadata_df, transform_fcn=lambda x: x, fixed_effect_df=fixed_effect_df)
+
 assert(var_df_0['random0'].mean()<0.05)
 assert(var_df_1['random0'].mean()>0.95)
 assert(var_df_2['random0'].mean()>0.95)
