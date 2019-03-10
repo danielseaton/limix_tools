@@ -101,7 +101,12 @@ def variance_decomposition(phenotype_ds, random_effect_dict):
     for key in var_component_names[:-1]:
         random_effect_matrix = random_effect_dict[key].loc[samples, samples].values
         random_effect_matrix = limix.qc.normalise_covariance(random_effect_matrix)
-        glmm.covariance_matrices.append(random_effect_matrix)
+        try:
+            glmm.covariance_matrices.append(random_effect_matrix)
+        except ValueError:
+            print(np.sum(random_effect_matrix, axis=0))
+            var_ds = pd.Series(data=np.nan, index=var_component_names)
+            return var_ds
     glmm.covariance_matrices.append_iid_noise()
 
     # fit the model
