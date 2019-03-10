@@ -3,7 +3,7 @@ import limix
 import numpy as np
 import pandas as pd
 import re
-from limix.vardec import VarianceDecomposition
+import limix
 import statsmodels.nonparametric.smoothers_lowess
 import random
 from .generate_covariance import generate_covariance_dict
@@ -94,17 +94,19 @@ def variance_decomposition(phenotype_ds, random_effect_dict):
         return var_ds
 
     # variance component model
-    vc = VarianceDecomposition(phenotype_ds.loc[samples].values)
-    # add intercept
-    vc.addFixedEffect()
-    for key in random_effect_dict.keys():
-        random_effect_matrix = random_effect_dict[key].loc[samples,
-                                                           samples].values
-        vc.addRandomEffect(K=random_effect_matrix)
-    vc.addRandomEffect(is_noise=True)
+    glmm = limix.glmm.GLMMComposer(len(y))
+    glmm.y = phenotype_ds.values
+    glmm.fixed_effects.append_offset()
+    for key in var_component_names[:-1]:
+        random_effect_matrix = random_effect_dict[key].loc[samples, samples].values
+        random_effect_matrix = limix.qc.normalise_covariance(random_effect_matrix)
+        glmm.covariance_matrices.append(random_effect_matrix)
+    glmm.covariance_matrices.append_iid_noise()
+
+    # fit the model
     try:
-        vc.optimize()
-        var_data = vc.getVarianceComps()[0]
+        glmm.fit(verbose=False)
+        var_data = [x.scale for x in glmm.covariance_matrices]
         var_ds = pd.Series(data=var_data, index=var_component_names)
         var_ds = var_ds / var_ds.sum()
     except np.linalg.linalg.LinAlgError:
