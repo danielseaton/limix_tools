@@ -94,8 +94,9 @@ def variance_decomposition(phenotype_ds, random_effect_dict):
         return var_ds
 
     # variance component model
+    y = phenotype_ds.values
     glmm = limix.glmm.GLMMComposer(len(y))
-    glmm.y = phenotype_ds.values
+    glmm.y = y
     glmm.fixed_effects.append_offset()
     for key in var_component_names[:-1]:
         random_effect_matrix = random_effect_dict[key].loc[samples, samples].values
