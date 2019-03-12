@@ -64,6 +64,12 @@ def calculate_empirical_overdispersion(mean, variance, transform_fcn):
     return overdispersion
 
 
+def normalize_covariance_matrix(K):
+    '''Gower normalization code borrowed from limix 2.0 '''
+    K = np.asarray(K, float)
+    c = (K.shape[0] - 1) / (K.trace() - K.mean(0).sum())
+    return c * K
+
 def run_variance_analysis_cross_validation(quant_df, metadata_df, transform_fcn=np.log2, cv_fraction=0.2):
     metadata_df.dropna(inplace=True)
     samples = list(set(metadata_df.index) & set(quant_df.columns))
@@ -112,6 +118,7 @@ def variance_decomposition(phenotype_ds, random_effect_dict, fixed_effect_df=Non
     for key in random_effect_dict.keys():
         random_effect_matrix = random_effect_dict[key].loc[samples,
                                                            samples].values
+        random_effect_matrix = normalize_covariance_matrix(random_effect_matrix)
         vc.addRandomEffect(K=random_effect_matrix)
     vc.addRandomEffect(is_noise=True)
 
@@ -121,7 +128,7 @@ def variance_decomposition(phenotype_ds, random_effect_dict, fixed_effect_df=Non
         var_data = vc.getVarianceComps()[0]
         var_ds = pd.Series(data=var_data, index=var_component_names)
         var_ds = var_ds / var_ds.sum()
-    except np.linalg.linalg.LinAlgError:
+    except (np.linalg.linalg.LinAlgError, ValueError) as e:
         # This error is raised when the covariance of the phenotype is not positive definite
         # (e.g. if it is all zeros)
         var_ds = pd.Series(data=np.nan, index=var_component_names)

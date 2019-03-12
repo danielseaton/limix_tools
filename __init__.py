@@ -1,2 +1,3 @@
+from . import variance_analysis
 from variance_analysis import run_variance_analysis,run_variance_analysis_cross_validation,variance_decomposition
 from generate_covariance import generate_kinship,generate_covariance_dict,generate_cis_kinship
