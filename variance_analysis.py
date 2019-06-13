@@ -64,7 +64,7 @@ def calculate_empirical_overdispersion(mean, variance, transform_fcn):
     return overdispersion
 
 
-def normalize_covariance_matrix(K):
+def gower_normalize_covariance_matrix(K):
     '''Gower normalization code borrowed from limix 2.0 '''
     K = np.asarray(K, float)
     c = (K.shape[0] - 1) / (K.trace() - K.mean(0).sum())
@@ -118,7 +118,6 @@ def variance_decomposition(phenotype_ds, random_effect_dict, fixed_effect_df=Non
     for key in random_effect_dict.keys():
         random_effect_matrix = random_effect_dict[key].loc[samples,
                                                            samples].values
-        random_effect_matrix = normalize_covariance_matrix(random_effect_matrix)
         vc.addRandomEffect(K=random_effect_matrix)
     vc.addRandomEffect(is_noise=True)
 
